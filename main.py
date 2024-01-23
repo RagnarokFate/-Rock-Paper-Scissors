@@ -24,29 +24,47 @@ def detect_hand_gesture():
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
                 # Extract hand landmarks
-                landmarks = [(int(point.x * frame.shape[1]), int(point.y * frame.shape[0])) for point in hand_landmarks.landmark]
+                landmarks = [(int(point.x * frame.shape[1]), int(point.y * frame.shape[0])) for point in
+                             hand_landmarks.landmark]
 
                 # Draw a rectangle around the hand
                 x, y, w, h = cv2.boundingRect(np.array(landmarks))
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+                # Detect rock, paper, scissors
+                gesture = detect_gesture(landmarks)
+                if gesture:
+                    cv2.putText(frame, f"Gesture: {gesture}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2,
+                                cv2.LINE_AA)
 
                 # Calculate accuracy factor (based on detection confidence)
                 accuracy_factor = results.multi_handedness[0].classification[0].score
                 accuracy_text = f"Accuracy: {int(accuracy_factor * 100)}%"
                 cv2.putText(frame, accuracy_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
 
-        # Display the frame
+
         cv2.imshow("Hand Gesture Detection", frame)
 
-        # Break the loop when 'q' key is pressed
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    # Release the video capture object
+
     cap.release()
     cv2.destroyAllWindows()
 
+
+def detect_gesture(landmarks):
+    if landmarks[4][1] < landmarks[8][1] and landmarks[4][1] < landmarks[12][1]:
+        return "Rock"
+    elif landmarks[8][1] < landmarks[6][1] and landmarks[8][1] < landmarks[10][1]:
+        return "Paper"
+    elif landmarks[6][1] < landmarks[8][1] and landmarks[10][1] < landmarks[8][1]:
+        return "Scissors"
+    else:
+        return None
+
+
 if __name__ == "__main__":
     detect_hand_gesture()
-
 
